@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neverending Notes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+
+<ul id="note-menu">
+    <li class="has-submenu">
+
+        <button class="note-menu-item" type="button">
+            <div class="note-menu-item__label">
+                Font Size
+            </div>
+            <div class="note-menu-item__arrow">
+                >
+            </div>
+        </button>
+
+        <ul class="submenu" id="font-size-select">
+            <li data-size="16">Small</li>
+            <li data-size="20">Medium</li>
+            <li data-size="24">Large</li>
+            <li data-size="28">Extra Large</li>
+        </ul>
+
+    </li>
+    <li class="has-submenu">
+
+        <button class="note-menu-item" type="button">
+            <div class="note-menu-item__label">
+                Background
+            </div>
+            <div class="note-menu-item__arrow">
+                >
+            </div>
+        </button>
+
+        <ul class="submenu" id="bg-color-select">
+            <li data-color="#fff8a6">Yellow</li>
+            <li data-color="#ffcdd2">Red</li>
+            <li data-color="#bbdefb">Blue</li>
+        </ul>
+
+    </li>
+	    <button class="note-menu-item" id="bring-to-front" type="button">
+            <div class="note-menu-item__label">
+                Bring to front
+            </div>
+        </button>
+    </li>
+    <li>
+    	<button class="note-menu-item" id="send-to-back" type="button">
+            <div class="note-menu-item__label">
+                Send to back
+            </div>
+        </button>
+    </li>
+</ul>
+
+
+<button id="save-button" type="button">☰ Save</button>
+<button id="theme-toggle" type="button">Toggle Theme</button>
+
+<script src="{{ url_for('static', filename='js/canvas.js') }}"></script>
+</body>
+</html>
