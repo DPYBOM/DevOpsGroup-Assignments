@@ -215,7 +215,6 @@ ctx.fill();
         ctx.globalCompositeOperation = "multiply";
         ctx.globalAlpha = 0.60;
         ctx.fillStyle = "#595656";
-        // ctx.fillRect(note.x, note.y, note.width, note.height);
         drawRoundedRect(ctx, note.x, note.y, note.width, note.height, 16);
 ctx.fill();
         ctx.restore();
@@ -238,8 +237,6 @@ ctx.fill();
 
     ctx.save();
     ctx.beginPath();
-    // ctx.rect(note.x, note.y, note.width, note.height);
-    // ctx.clip();
     drawRoundedRect(ctx, note.x, note.y, note.width, note.height, 16);
     ctx.clip();
 
@@ -260,7 +257,7 @@ ctx.fill();
     // Resize border
     ctx.save();
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalAlpha = 0.50; // transparency
+    ctx.globalAlpha = 0.50; // Transparency of resize border
     ctx.lineWidth = 2;
     ctx.strokeStyle = selectedNote === note
         ? (isDark ? "#ff6b6b" : "red")
@@ -339,16 +336,6 @@ function updateEditorTransform() {
 }
 
 
-function updateCanvasHeightForEditor() {
-    if (!activeTextarea) return;
-    
-    const bottomOfTextarea = activeTextarea.offsetTop + activeTextarea.scrollHeight;
-    if (bottomOfTextarea > canvas.height) {
-        canvas.height = bottomOfTextarea + 50; // a little padding
-        draw();
-    }
-}
-
 function recomputeNoteHeight(note, ctx) {
     const padding = 10;
     const fontSize = note.fontSize || 16;
@@ -387,10 +374,6 @@ canvas.addEventListener("contextmenu", (e) => {
     noteMenu.style.left = e.clientX + "px";
     noteMenu.style.top = e.clientY + "px";
     noteMenu.style.display = "block";
-
-    // Set current values
-    fontSizeSelect.value = note.fontSize || 16;
-    bgColorSelect.value = note.bgColor || "#fff8a6";
 });
 
 fontSizeSelect.addEventListener("click", (e) => {
@@ -457,7 +440,7 @@ canvas.addEventListener("mousedown", (e) => {
     const handleSize = 8;
     const borderOffset = 5;
 
-    // Find handle
+    // Find resize handle
     for (let i = notes.length - 1; i >= 0; i--) {
         const note = notes[i];
 
