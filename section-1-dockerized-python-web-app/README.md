@@ -20,6 +20,11 @@ http://localhost:5000
 ```
 
 ```bash
+#Run in detached mode after build
+docker compose up -d
+```
+
+```bash
 #Stop container
 docker compose down
 ```
