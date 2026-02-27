@@ -1,0 +1,9 @@
+services:
+  flask-app:
+    build: .
+    container_name: flask-notes-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./notes.json:/app/notes.json
+    restart: unless-stopped
