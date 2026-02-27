@@ -1,13 +1,32 @@
 from flask import Flask, render_template, request, jsonify
-import json
+from flask_sqlalchemy import SQLAlchemy
 import os
 
 app = Flask(__name__)
-DATA_FILE = "notes.json"
 
-def load_notes():
-    if not os.path.exists(DATA_FILE):
-        return {
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@db:5432/notesdb"
+)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+db = SQLAlchemy(app)
+
+
+# Single table storing entire app state as JSON
+class AppData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.JSON)
+
+
+with app.app_context():
+    db.create_all()
+
+    # Ensure one row exists
+    if AppData.query.first() is None:
+        db.session.add(AppData(data={
             "notes": [],
             "viewport": {
                 "scale": 1,
@@ -15,17 +34,8 @@ def load_notes():
                 "offsetY": 0
             },
             "theme": "light"
-        }
-    try:
-        with open(DATA_FILE, "r") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        return []
-
-
-def save_notes(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f)
+        }))
+        db.session.commit()
 
 
 @app.route("/")
@@ -34,14 +44,16 @@ def index():
 
 
 @app.route("/api/notes", methods=["GET"])
-def get_notes():
-    return jsonify(load_notes())
+def load_data():
+    appdata = AppData.query.first()
+    return jsonify(appdata.data)
 
 
 @app.route("/api/notes", methods=["POST"])
-def save():
-    data = request.json
-    save_notes(data)
+def save_data():
+    appdata = AppData.query.first()
+    appdata.data = request.json
+    db.session.commit()
     return jsonify({"status": "ok"})
 
 
