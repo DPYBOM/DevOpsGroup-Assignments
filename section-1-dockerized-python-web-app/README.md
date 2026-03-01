@@ -98,3 +98,10 @@ Features:
 - Persistent volume for PostgreSQL data
 
 - Service dependency configuration
+
+---
+
+## Application showcase
+
+![image](attachments/Neverending-notes1.png)
+![image](attachments/Neverending-notes2.png)
