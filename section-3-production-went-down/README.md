@@ -9,14 +9,15 @@
 
 #### 1. Verify clearly
 
-Confirm the outage and acknowledge it immediately.
+Confirm the outage, could it be false positive?
 Is the app fully down (HTTP 500 / timeout)?
 Is it partially degraded?
 Is monitoring alerting correct?
 
 ```
 Example:
-Monitoring (e.g., uptime check or load balancer health check) shows 502 errors. You try accessing the app yourself and confirm it's unreachable.
+Monitoring (e.g., uptime check or load balancer health check) shows 502 errors.
+You try accessing the app yourself and confirm it's unreachable.
 ```
 
 ---
@@ -33,7 +34,8 @@ Internal system or customer-facing?
 
 ```
 Example:
-Only /api/orders returns 500, but homepage works fine → likely backend service or database issue.
+Only /api/orders returns 500,
+but homepage works fine → likely backend service or database issue.
 ```
 
 ---
@@ -78,7 +80,8 @@ Root cause → “Database connection string changed and credentials invalid”
 
 ```
 Example:
-Recent deployment added new DB migration but production DB user lacks permissions → SqlException in logs.
+Recent deployment added new DB migration
+but production DB user lacks permissions → SqlException in logs.
 ```
 
 ---
