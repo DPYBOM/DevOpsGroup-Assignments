@@ -1,6 +1,7 @@
 services:
   flask-app:
     build: .
+    image: flask-notes-app:latest
     container_name: flask-notes-app
     ports:
       - "5000:5000"
