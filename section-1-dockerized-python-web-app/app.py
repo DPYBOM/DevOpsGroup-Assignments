@@ -21,21 +21,22 @@ class AppData(db.Model):
     data = db.Column(db.JSON)
 
 
-with app.app_context():
-    db.create_all()
+if os.getenv("SKIP_DB_INIT") != "1":
+    with app.app_context():
+        db.create_all()
 
-    # Ensure one row exists
-    if AppData.query.first() is None:
-        db.session.add(AppData(data={
-            "notes": [],
-            "viewport": {
-                "scale": 1,
-                "offsetX": 0,
-                "offsetY": 0
-            },
-            "theme": "light"
-        }))
-        db.session.commit()
+        # Ensure one row exists
+        if AppData.query.first() is None:
+            db.session.add(AppData(data={
+                "notes": [],
+                "viewport": {
+                    "scale": 1,
+                    "offsetX": 0,
+                    "offsetY": 0
+                },
+                "theme": "light"
+            }))
+            db.session.commit()
 
 
 @app.route("/")
@@ -56,6 +57,9 @@ def save_data():
     db.session.commit()
     return jsonify({"status": "ok"})
 
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
