@@ -1,0 +1,149 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: ["main", "dev"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  APP_DIR: section-1-dockerized-python-web-app
+
+jobs:
+  # ─────────────────────────────────────────
+  # 1. CODE QUALITY & TESTS
+  # ─────────────────────────────────────────
+  quality:
+    name: Lint & Tests (flake8 + pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14.3"
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Run flake8
+        working-directory: ${{ env.APP_DIR }}
+        run: flake8 . --max-line-length=88 --exclude=.git,__pycache__,venv
+
+      - name: Run pytest
+        working-directory: ${{ env.APP_DIR }}
+        env:
+          SKIP_DB_INIT: "1"
+          DATABASE_URL: "sqlite:///:memory:"
+        run: pytest tests/ -v --tb=short
+
+  # ─────────────────────────────────────────
+  # 2. SECURITY CHECKS
+  # ─────────────────────────────────────────
+  security:
+    name: SAST & SCA (bandit + pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: "3.14.3"
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_DIR }}
+        run: pip install -r requirements-dev.txt
+
+      - name: Run bandit
+        working-directory: ${{ env.APP_DIR }}
+        run: bandit -r . -x ./tests,./venv -f json -o bandit-report.json
+        continue-on-error: true
+
+      - name: Print bandit summary
+        if: always()
+        working-directory: ${{ env.APP_DIR }}
+        run: bandit -r . -x ./tests,./venv -ll
+
+      - name: Run pip-audit
+        working-directory: ${{ env.APP_DIR }}
+        run: pip-audit -r requirements.txt -f json -o pip-audit-report.json
+        continue-on-error: true
+
+      - name: Print pip-audit summary
+        if: always()
+        working-directory: ${{ env.APP_DIR }}
+        run: pip-audit -r requirements.txt
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: security-reports
+          path: |
+            ${{ env.APP_DIR }}/bandit-report.json
+            ${{ env.APP_DIR }}/pip-audit-report.json
+
+  # ─────────────────────────────────────────
+  # 3. CONTAINER BUILD & SECURITY SCAN
+  # ─────────────────────────────────────────
+  container:
+    name: Container Build & Scan (Trivy)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - name: Build Docker image
+        working-directory: ${{ env.APP_DIR }}
+        run: docker compose build flask-app
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: flask-notes-app:latest
+          format: table
+          exit-code: "0"
+          severity: "MEDIUM,HIGH,CRITICAL"
+          ignore-unfixed: true
+
+      - name: Run Trivy - SARIF report
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: flask-notes-app:latest
+          format: sarif
+          output: trivy-report.sarif
+          severity: "MEDIUM,HIGH,CRITICAL"
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-report.sarif
+
+  # ─────────────────────────────────────────
+  # 4. SUMMARY GATE
+  # ─────────────────────────────────────────
+  pipeline-gate:
+    name: Pipeline Gate
+    runs-on: ubuntu-latest
+    needs: [quality, security, container]
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.quality.result }}" != "success" ]]; then
+            echo "❌ Lint/tests failed — blocking merge"
+            exit 1
+          fi
+
+          if [[ "${{ needs.security.result }}" != "success" || \
+                "${{ needs.container.result }}" != "success" ]]; then
+            echo "⚠️  Security jobs had findings — review artifacts before merging"
+            exit 1
+          fi
+
+          echo "✅ All checks passed"
