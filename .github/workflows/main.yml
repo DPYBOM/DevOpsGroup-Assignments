@@ -2,9 +2,9 @@ name: DevSecOps Pipeline
 
 on:
   push:
-    branches: ["main", "dev"]
+    branches: ["master", "test-actions"]
   pull_request:
-    branches: ["main"]
+    branches: ["master"]
 
 env:
   APP_DIR: section-1-dockerized-python-web-app
@@ -12,7 +12,7 @@ env:
 jobs:
   # ─────────────────────────────────────────
   # 1. CODE QUALITY & TESTS
-  # ─────────────────────────────────────────
+  # ────────────────────────────────────────
   quality:
     name: Lint & Tests (flake8 + pytest)
     runs-on: ubuntu-latest
