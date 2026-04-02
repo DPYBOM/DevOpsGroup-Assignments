@@ -33,6 +33,7 @@ jobs:
         run: flake8 . --max-line-length=88 --exclude=.git,__pycache__,venv
 
       - name: Run pytest
+        if: always()
         working-directory: ${{ env.APP_DIR }}
         env:
           SKIP_DB_INIT: "1"
